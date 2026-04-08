@@ -26,9 +26,23 @@ This app takes an uploaded chest X-ray, runs the CNN, generates Grad-CAM overlay
 
 The uploaded model weights are a PyTorch `state_dict`. The app now loads them and expects the retrieval and graph inputs to come from local JSON files.
 
-## Deployment note
+## Deployment
 
-This repository is a Streamlit application. It is safe to push to GitHub as-is, but Vercel does not run a long-lived Streamlit server directly. If you need a Vercel deployment, you will need to split the app into a separate frontend plus API service. For a direct Python app deployment, Streamlit Community Cloud or a container host is a better fit.
+This repository is a Streamlit application. The recommended host is Streamlit Community Cloud.
+
+### Streamlit Community Cloud (recommended)
+
+1. Push this repository to GitHub (the project already includes `app.py` at the root and a `requirements.txt`).
+2. Go to Streamlit Community Cloud and click **Create app**.
+3. Select this GitHub repository and branch.
+4. Set **Main file path** to `app.py`.
+5. Deploy.
+
+If the app restarts or sleeps after inactivity, open it again and wait for the warm-up. That is normal on the free tier.
+
+### Why not Vercel for this codebase
+
+Vercel does not run a long-lived Streamlit server directly. To use Vercel, you would need to re-architect into a separate frontend and API.
 
 ## Data locations
 
