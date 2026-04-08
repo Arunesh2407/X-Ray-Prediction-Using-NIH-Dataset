@@ -59,10 +59,10 @@ weights_path = Path(os.getenv("MODEL_WEIGHTS_PATH", "weights/best_model.pth"))
 retrieval_path = Path(os.getenv("RETRIEVAL_DATA_PATH", "data/retrieval"))
 graph_path = Path(os.getenv("GRAPH_DATA_PATH", "data/graph/relations.json"))
 
-st.sidebar.header("Runtime paths")
-st.sidebar.write(f"Weights: {weights_path}")
-st.sidebar.write(f"Retrieval data: {retrieval_path}")
-st.sidebar.write(f"Graph data: {graph_path}")
+with st.sidebar.expander("Runtime paths", expanded=False):
+    st.write(f"Weights: {weights_path}")
+    st.write(f"Retrieval data: {retrieval_path}")
+    st.write(f"Graph data: {graph_path}")
 
 uploaded = st.file_uploader("Upload a chest X-ray", type=["png", "jpg", "jpeg"])
 
