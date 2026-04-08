@@ -11,7 +11,7 @@ def build_report(
     graph_relations: list[GraphRelation],
 ) -> ReportBundle:
     positive = [item for item in predictions if item.selected and item.label != "No finding"]
-    finding_lines = [f"- {item.label}: {item.probability:.2f}" for item in positive]
+    finding_lines = [f"- {item.label}" for item in positive]
 
     if not finding_lines:
         finding_lines = ["- No finding: no dominant abnormality selected by the stub model."]
