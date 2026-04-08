@@ -1,0 +1,25 @@
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+build/
+dist/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# Streamlit and local runtime files
+.streamlit/secrets.toml
+uploaded_xray.png
+outputs/
+
+# Environment and editor files
+.env
+.env.*
+.vscode/
+Thumbs.db
+.DS_Store
