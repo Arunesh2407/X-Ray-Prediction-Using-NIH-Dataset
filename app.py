@@ -141,7 +141,7 @@ with summary_tab:
 with gradcam_tab:
     st.subheader("Paper-style Grad-CAM Montage")
     if isinstance(montage_path, Path) and montage_path.exists():
-        st.image(str(montage_path), caption="Combined figure with rows (A), (B), (C)", use_container_width=True)
+        st.image(str(montage_path), caption="Combined figure with rows (A), (B), (C)", width=900)
     else:
         st.info("No montage was produced for this image.")
 
@@ -164,7 +164,11 @@ with gradcam_tab:
 
         heatmap_path = Path(region.heatmap_path) if region.heatmap_path else None
         if heatmap_path and heatmap_path.exists():
-            st.image(str(heatmap_path), caption=f"Grad-CAM panel (original, heatmap, overlay) for {region.label}", use_container_width=True)
+            st.image(
+                str(heatmap_path),
+                caption=f"Grad-CAM panel (original, heatmap, overlay) for {region.label}",
+                width=720,
+            )
         else:
             st.info("No overlay image was found for this region. The metadata table above still captures the explanation.")
 

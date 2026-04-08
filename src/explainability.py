@@ -75,13 +75,15 @@ def generate_gradcam_regions(
     base_image = Image.open(image_path).convert("RGB")
     gradcam = GradCAM(model.network, model.target_layer)
 
+    style_tag = "jetgrid"
+
     for item in positive[:3]:
         class_index = model.labels.index(item.label)
         heatmap = gradcam.compute(image_tensor, class_index)
         description, laterality, lung_zone, coordinates, heatmap_path = _build_region_metadata(
             base_image,
             heatmap,
-            output_dir / f"{Path(image_path).stem}_{item.label.replace(' ', '_')}.png",
+            output_dir / f"{Path(image_path).stem}_{item.label.replace(' ', '_')}_{style_tag}.png",
             item.label,
         )
         regions.append(
@@ -100,7 +102,7 @@ def generate_gradcam_regions(
             RegionAttribution(
                 label="No finding",
                 description="No dominant focal abnormality detected on the provided image.",
-                heatmap_path=str(output_dir / f"{Path(image_path).stem}_no_finding.png"),
+                heatmap_path=str(output_dir / f"{Path(image_path).stem}_no_finding_{style_tag}.png"),
                 coordinates=[0.0, 0.0, 1.0, 1.0],
             )
         )
@@ -172,9 +174,12 @@ def _build_region_metadata(
     heatmap_array = heatmap.numpy()
     heatmap_image = Image.fromarray(np.uint8(heatmap_array * 255), mode="L")
     heatmap_image = heatmap_image.resize(base_image.size)
-    overlay = ImageOps.colorize(heatmap_image, black="#000000", white="#ff3300")
-    blended = Image.blend(base_image, overlay.convert("RGB"), alpha=0.45)
-    blended.save(output_path)
+    grayscale_base = ImageOps.grayscale(base_image).convert("RGB")
+    heatmap_color = Image.fromarray(_apply_jet_colormap(heatmap_array), mode="RGB").resize(base_image.size)
+    blended = Image.blend(grayscale_base, heatmap_color, alpha=0.46)
+
+    panel = _compose_gradcam_panel(grayscale_base, heatmap_color, blended)
+    panel.save(output_path)
 
     coordinates = _heatmap_bbox(heatmap_array)
     laterality = _infer_laterality(coordinates)
@@ -241,3 +246,63 @@ def _label_to_description(label: str, laterality: str | None, lung_zone: str | N
     if location_parts:
         return f"{', '.join(location_parts)} {base}"
     return base
+
+
+def _compose_gradcam_panel(
+    original: Image.Image,
+    heatmap: Image.Image,
+    overlay: Image.Image,
+) -> Image.Image:
+    # Keep panel tiles compact so the report stays readable in Streamlit.
+    tile_original = _resize_for_panel(original, max_side=250)
+    tile_heatmap = _resize_for_panel(heatmap, max_side=250)
+    tile_overlay = _resize_for_panel(overlay, max_side=250)
+
+    tiles = [tile_original, tile_heatmap, tile_overlay]
+    tile_width = max(tile.width for tile in tiles)
+    tile_height = max(tile.height for tile in tiles)
+
+    gap = 8
+    padding = 8
+    label_height = 18
+    canvas_width = padding * 2 + (tile_width * 3) + (gap * 2)
+    canvas_height = padding * 2 + label_height + tile_height
+    canvas = Image.new("RGB", (canvas_width, canvas_height), color=(248, 248, 248))
+    draw = ImageDraw.Draw(canvas)
+    try:
+        label_font = ImageFont.truetype("arial.ttf", 12)
+    except OSError:
+        label_font = ImageFont.load_default()
+
+    labels = ["Original", "Heatmap", "Superimposed"]
+
+    x_cursor = padding
+    for index, tile in enumerate(tiles):
+        x_offset = x_cursor + (tile_width - tile.width) // 2
+        y_offset = padding + label_height + (tile_height - tile.height) // 2
+        label_text = labels[index]
+        label_width = draw.textlength(label_text, font=label_font)
+        label_x = x_cursor + (tile_width - int(label_width)) // 2
+        draw.text((label_x, padding), label_text, fill=(30, 30, 30), font=label_font)
+        canvas.paste(tile, (x_offset, y_offset))
+        x_cursor += tile_width + gap
+
+    return canvas
+
+
+def _resize_for_panel(image: Image.Image, max_side: int) -> Image.Image:
+    width, height = image.size
+    if width <= 0 or height <= 0:
+        return image
+    scale = min(max_side / float(width), max_side / float(height), 1.0)
+    new_size = (max(1, int(width * scale)), max(1, int(height * scale)))
+    return image.resize(new_size, Image.Resampling.BICUBIC)
+
+
+def _apply_jet_colormap(heatmap: np.ndarray) -> np.ndarray:
+    values = np.clip(heatmap, 0.0, 1.0)
+    r = np.clip(1.5 - np.abs(4.0 * values - 3.0), 0.0, 1.0)
+    g = np.clip(1.5 - np.abs(4.0 * values - 2.0), 0.0, 1.0)
+    b = np.clip(1.5 - np.abs(4.0 * values - 1.0), 0.0, 1.0)
+    rgb = np.stack([r, g, b], axis=-1)
+    return np.uint8(rgb * 255.0)
