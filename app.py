@@ -5,7 +5,7 @@ from pathlib import Path
 
 import streamlit as st
 
-from src.explainability import build_gradcam_montage, generate_gradcam_regions
+from src import explainability
 from src.graph_rag import query_graph
 from src.model_stub import RealCNNModel
 from src.reporting import build_report
@@ -80,8 +80,10 @@ def load_model(weight_file: str) -> RealCNNModel:
 
 model = load_model(str(weights_path))
 predictions = model.predict(str(workspace_image))
-regions = generate_gradcam_regions(model, str(workspace_image), predictions)
-montage_path = build_gradcam_montage(str(workspace_image), regions)
+regions = explainability.generate_gradcam_regions(model, str(workspace_image), predictions)
+build_gradcam_montage = getattr(explainability, "build_gradcam_montage", None)
+montage_candidate = build_gradcam_montage(str(workspace_image), regions) if callable(build_gradcam_montage) else None
+montage_path = montage_candidate if isinstance(montage_candidate, Path) else None
 evidence = retrieve_evidence(predictions, regions, corpus_path=str(retrieval_path))
 graph_relations = query_graph(predictions, graph_path=str(graph_path))
 report = build_report(
@@ -125,6 +127,8 @@ with summary_tab:
             [
                 {
                     "label": item.label,
+                    "probability": item.probability,
+                    "threshold": item.threshold,
                     "status": "Detected" if item.selected and item.label != "No finding" else "Not selected",
                 }
                 for item in predictions
@@ -136,7 +140,7 @@ with summary_tab:
 
 with gradcam_tab:
     st.subheader("Paper-style Grad-CAM Montage")
-    if montage_path and montage_path.exists():
+    if isinstance(montage_path, Path) and montage_path.exists():
         st.image(str(montage_path), caption="Combined figure with rows (A), (B), (C)", use_container_width=True)
     else:
         st.info("No montage was produced for this image.")

@@ -6,9 +6,7 @@ from typing import Any
 import numpy as np
 import torch
 import torch.nn.functional as F
-from PIL import Image, ImageOps
-
-from pathlib import Path
+from PIL import Image, ImageDraw, ImageFont, ImageOps
 
 from src.model_stub import RealCNNModel
 from src.schema import PredictionItem, RegionAttribution
@@ -109,6 +107,60 @@ def generate_gradcam_regions(
 
     gradcam.close()
     return regions
+
+
+def build_gradcam_montage(
+    image_path: str,
+    regions: list[RegionAttribution],
+    output_path: str | Path | None = None,
+    max_rows: int = 3,
+) -> Path | None:
+    rows: list[tuple[str, Image.Image, Path]] = []
+    for region in regions[:max_rows]:
+        if not region.heatmap_path:
+            continue
+        panel_path = Path(region.heatmap_path)
+        if not panel_path.exists():
+            continue
+        rows.append((region.label, Image.open(panel_path).convert("RGB"), panel_path))
+
+    if not rows:
+        return None
+
+    max_width = max(image.width for _, image, _ in rows)
+    title_height = 34
+    row_gap = 16
+    padding = 18
+    canvas_height = (
+        padding * 2
+        + sum(title_height + image.height for _, image, _ in rows)
+        + row_gap * max(0, len(rows) - 1)
+    )
+    canvas = Image.new("RGB", (max_width + padding * 2, canvas_height), color=(242, 242, 242))
+    draw = ImageDraw.Draw(canvas)
+
+    try:
+        title_font = ImageFont.truetype("arial.ttf", 22)
+    except OSError:
+        title_font = ImageFont.load_default()
+
+    y_cursor = padding
+    for index, (label, image, _path) in enumerate(rows):
+        row_tag = chr(ord("A") + index)
+        draw.text((padding, y_cursor), f"({row_tag}) {label}", fill=(15, 15, 15), font=title_font)
+        y_cursor += title_height
+        x_offset = padding + (max_width - image.width) // 2
+        canvas.paste(image, (x_offset, y_cursor))
+        y_cursor += image.height + row_gap
+
+    if output_path is None:
+        output_dir = rows[0][2].parent
+        output_path = output_dir / f"{Path(image_path).stem}_gradcam_montage.png"
+
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    canvas.save(output_path)
+    return output_path
 
 
 def _build_region_metadata(
