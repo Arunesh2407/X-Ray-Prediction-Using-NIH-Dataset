@@ -5,25 +5,6 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 
-LABELS = [
-    "Atelectasis",
-    "Cardiomegaly",
-    "Effusion",
-    "Infiltration",
-    "Mass",
-    "Nodule",
-    "Pneumonia",
-    "Pneumothorax",
-    "Consolidation",
-    "Edema",
-    "Emphysema",
-    "Fibrosis",
-    "Pleural_thickening",
-    "Hernia",
-    "No finding",
-]
-
-
 class PredictionItem(BaseModel):
     label: str
     probability: float = Field(ge=0.0, le=1.0)

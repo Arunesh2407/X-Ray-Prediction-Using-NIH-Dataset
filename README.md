@@ -49,6 +49,24 @@ Vercel does not run a long-lived Streamlit server directly. To use Vercel, you w
 - Model weights: `weights/best_model.pth`
 - Retrieval data: `data/retrieval/` or `data/retrieval.json`
 - Graph data: `data/graph/relations.json`
+- Business config: `config/business_config.json`
+
+## Configuration
+
+Business constants are now loaded from `config/business_config.json` (labels, thresholds, report messages, Grad-CAM settings, and UI options). You can tune behavior by editing this file without changing Python code.
+
+## LLM report generation
+
+The clinician and patient reports can be generated through Groq when `GROQ_API_KEY` is set in the environment. If the key is missing or the request fails, the app falls back to the deterministic template report.
+
+The app also checks a local `.env` file and `.streamlit/secrets.toml`, so you can keep the key out of the terminal session if you prefer.
+
+Optional environment variables:
+
+- `GROQ_API_KEY`: your Groq API key
+- `GROQ_MODEL`: model name to use, default `llama-3.3-70b-versatile`
+- `GROQ_TEMPERATURE`: sampling temperature, default `0.2`
+- `GROQ_TIMEOUT_SECONDS`: request timeout, default `30`
 
 ## Safe git setup
 

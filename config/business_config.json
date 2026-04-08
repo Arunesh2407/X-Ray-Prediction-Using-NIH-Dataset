@@ -1,0 +1,75 @@
+{
+  "labels": [
+    "Atelectasis",
+    "Cardiomegaly",
+    "Effusion",
+    "Infiltration",
+    "Mass",
+    "Nodule",
+    "Pneumonia",
+    "Pneumothorax",
+    "Consolidation",
+    "Edema",
+    "Emphysema",
+    "Fibrosis",
+    "Pleural_thickening",
+    "Hernia",
+    "No finding"
+  ],
+  "no_finding_label": "No finding",
+  "thresholds": {
+    "default": 0.5,
+    "overrides": {
+      "Pneumothorax": 0.35
+    }
+  },
+  "model_settings": {
+    "image_size": 224,
+    "device": "cpu",
+    "normalization_mean": [0.485, 0.456, 0.406],
+    "normalization_std": [0.229, 0.224, 0.225],
+    "dropout_rate": 0.5
+  },
+  "gradcam_settings": {
+    "style_tag": "jetgrid",
+    "max_regions": 3,
+    "bbox_threshold": 0.45,
+    "blend_alpha": 0.46,
+    "laterality_left_threshold": 0.42,
+    "laterality_right_threshold": 0.58,
+    "lung_zone_upper_threshold": 0.33,
+    "lung_zone_lower_threshold": 0.66,
+    "label_descriptions": {
+      "Atelectasis": "linear or plate-like basal opacity consistent with volume loss",
+      "Consolidation": "focal air-space opacity suspicious for consolidation",
+      "Infiltration": "patchy interstitial or air-space opacity",
+      "Pneumothorax": "visible pleural line with absent peripheral lung markings",
+      "Edema": "bilateral perihilar interstitial opacity suggestive of edema",
+      "Emphysema": "hyperinflation with increased lucency",
+      "Fibrosis": "chronic reticular scarring pattern",
+      "Effusion": "blunting of the costophrenic angle with dependent opacity",
+      "Pneumonia": "lobar or segmental opacity concerning for infection",
+      "Pleural_thickening": "pleural-based linear thickening",
+      "Cardiomegaly": "enlarged cardiomediastinal silhouette",
+      "Mass": "rounded focal opacity requiring correlation",
+      "Nodule": "small rounded focal opacity requiring correlation",
+      "Hernia": "abnormal mediastinal or diaphragmatic contour"
+    },
+    "no_finding_description": "No dominant focal abnormality detected on the provided image.",
+    "panel_labels": ["Original", "Heatmap", "Superimposed"]
+  },
+  "reporting_messages": {
+    "no_predictions": "No finding: no dominant abnormality selected by the model.",
+    "summary_prefix": "The image suggests possible findings in:",
+    "summary_suffix": "A clinician should review the image, the evidence, and the final report before any decision.",
+    "summary_no_findings": "The current workflow does not show a dominant abnormality. A clinician should review the image and the final report before any decision.",
+    "no_evidence": "No evidence snippets matched the current prediction set.",
+    "no_graph": "No graph relations matched the current prediction set."
+  },
+  "ui_settings": {
+    "page_title": "Chest X-ray Decision Support",
+    "page_layout": "wide",
+    "upload_types": ["png", "jpg", "jpeg"],
+    "workspace_image_filename": "uploaded_xray.png"
+  }
+}

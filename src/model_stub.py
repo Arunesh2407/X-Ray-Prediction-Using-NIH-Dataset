@@ -7,9 +7,9 @@ import torch
 import torch.nn as nn
 from PIL import Image
 from torchvision import transforms
-from dataclasses import dataclass
 
-from src.schema import LABELS, PredictionItem
+from src.config import get_labels, get_model_settings, get_thresholds
+from src.schema import PredictionItem
 
 
 class ConvBlock(nn.Module):
@@ -30,7 +30,7 @@ class ConvBlock(nn.Module):
 
 
 class ChestXrayCNN(nn.Module):
-    def __init__(self, num_classes: int) -> None:
+    def __init__(self, num_classes: int, dropout_rate: float) -> None:
         super().__init__()
         self.features = nn.ModuleList(
             [
@@ -43,11 +43,11 @@ class ChestXrayCNN(nn.Module):
         )
         self.pool = nn.AdaptiveAvgPool2d((1, 1))
         self.classifier = nn.Sequential(
-            nn.Dropout(p=0.5),
+            nn.Dropout(p=dropout_rate),
             nn.Identity(),
             nn.Linear(512, 256),
             nn.ReLU(inplace=True),
-            nn.Dropout(p=0.5),
+            nn.Dropout(p=dropout_rate),
             nn.Linear(256, num_classes),
         )
 
@@ -63,30 +63,42 @@ class ChestXrayCNN(nn.Module):
 @dataclass
 class RealCNNModel:
     weights_path: str
-    labels: list[str] = None
-    image_size: int = 224
-    device: str = "cpu"
+    labels: list[str] | None = None
+    image_size: int | None = None
+    device: str | None = None
     thresholds: dict[str, float] | None = None
 
     def __post_init__(self) -> None:
+        model_settings = get_model_settings()
+        thresholds_cfg = get_thresholds()
         if self.labels is None:
-            self.labels = LABELS
+            self.labels = get_labels()
+        if self.image_size is None:
+            self.image_size = int(model_settings.get("image_size", 224))
+        if self.device is None:
+            self.device = str(model_settings.get("device", "cpu"))
+
         self.weights_path = str(Path(self.weights_path))
         self._device = torch.device(self.device)
-        self._model = ChestXrayCNN(num_classes=len(self.labels)).to(self._device)
+        self._model = ChestXrayCNN(
+            num_classes=len(self.labels),
+            dropout_rate=float(model_settings.get("dropout_rate", 0.5)),
+        ).to(self._device)
         self._load_weights(Path(self.weights_path))
         self._model.eval()
+
+        mean = model_settings.get("normalization_mean", [0.485, 0.456, 0.406])
+        std = model_settings.get("normalization_std", [0.229, 0.224, 0.225])
         self._preprocess = transforms.Compose(
             [
                 transforms.Resize((self.image_size, self.image_size)),
                 transforms.ToTensor(),
-                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+                transforms.Normalize(mean=mean, std=std),
             ]
         )
         if self.thresholds is None:
-            self.thresholds = {label: 0.5 for label in self.labels}
-            if "Pneumothorax" in self.thresholds:
-                self.thresholds["Pneumothorax"] = 0.35
+            self.thresholds = get_thresholds(self.labels)
+        self._default_threshold = float(thresholds_cfg.get("default", 0.5))
 
     def _load_weights(self, weight_path: Path) -> None:
         if not weight_path.exists():
@@ -125,7 +137,7 @@ class RealCNNModel:
 
         items: list[PredictionItem] = []
         for label, probability in zip(self.labels, probabilities, strict=True):
-            threshold = self.thresholds.get(label, 0.5) if self.thresholds else 0.5
+            threshold = self.thresholds.get(label, self._default_threshold) if self.thresholds else self._default_threshold
             items.append(
                 PredictionItem(
                     label=label,

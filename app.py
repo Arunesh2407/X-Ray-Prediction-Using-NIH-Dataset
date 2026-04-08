@@ -2,17 +2,25 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+from typing import Literal, cast
 
 import streamlit as st
 
+from src.config import get_no_finding_label, get_reporting_messages, get_ui_settings
 from src import explainability
 from src.graph_rag import query_graph
 from src.model_stub import RealCNNModel
 from src.reporting import build_report
 from src.retrieval import retrieve_evidence
 
+ui_settings = get_ui_settings()
+no_finding_label = get_no_finding_label()
+reporting_messages = get_reporting_messages()
 
-st.set_page_config(page_title="Chest X-ray Decision Support", layout="wide")
+st.set_page_config(
+    page_title=str(ui_settings.get("page_title", "Chest X-ray Decision Support")),
+    layout=cast(Literal["centered", "wide"], ui_settings.get("page_layout", "wide")),
+)
 
 st.title("Chest X-ray Decision Support Prototype")
 st.caption("The CNN now loads the uploaded PyTorch weights and the remaining stages read from real data files.")
@@ -64,13 +72,16 @@ with st.sidebar.expander("Runtime paths", expanded=False):
     st.write(f"Retrieval data: {retrieval_path}")
     st.write(f"Graph data: {graph_path}")
 
-uploaded = st.file_uploader("Upload a chest X-ray", type=["png", "jpg", "jpeg"])
+uploaded = st.file_uploader(
+    "Upload a chest X-ray",
+    type=list(ui_settings.get("upload_types", ["png", "jpg", "jpeg"])),
+)
 
 if uploaded is None:
     st.info("Upload an image to run the end-to-end workflow.")
     st.stop()
 
-workspace_image = Path("uploaded_xray.png")
+workspace_image = Path(str(ui_settings.get("workspace_image_filename", "uploaded_xray.png")))
 workspace_image.write_bytes(uploaded.getbuffer())
 
 @st.cache_resource
@@ -94,7 +105,7 @@ report = build_report(
     graph_relations=graph_relations,
 )
 
-selected_findings = [item for item in predictions if item.selected and item.label != "No finding"]
+selected_findings = [item for item in predictions if item.selected and item.label != no_finding_label]
 
 summary_tab, gradcam_tab, reports_tab, details_tab = st.tabs(
     ["Summary", "Grad-CAM", "Reports", "Evidence & Graph"]
@@ -119,7 +130,7 @@ with summary_tab:
                     unsafe_allow_html=True,
                 )
         else:
-            st.info("No dominant finding selected for this study.")
+            st.info(reporting_messages["summary_no_findings"])
 
     with table_col:
         st.caption("All labels")
@@ -129,10 +140,10 @@ with summary_tab:
                     "label": item.label,
                     "probability": item.probability,
                     "threshold": item.threshold,
-                    "status": "Detected" if item.selected and item.label != "No finding" else "Not selected",
+                    "status": "Detected" if item.selected and item.label != no_finding_label else "Not selected",
                 }
                 for item in predictions
-                if item.label != "No finding"
+                if item.label != no_finding_label
             ],
             use_container_width=True,
             hide_index=True,
@@ -174,6 +185,18 @@ with gradcam_tab:
 
 with reports_tab:
     st.subheader("Clinician Report")
+    report_mode = str(report.metadata.get("reporting_mode", "template"))
+    llm_model = report.metadata.get("llm_model")
+    llm_error = report.metadata.get("llm_error")
+    llm_error_detail = report.metadata.get("llm_error_detail")
+    if report_mode == "llm" and llm_model:
+        st.caption(f"Generated with Groq model {llm_model}")
+    else:
+        st.caption("Generated with the local template fallback")
+        if llm_error:
+            st.warning(f"LLM fallback reason: {llm_error}")
+        if llm_error_detail:
+            st.caption(f"LLM detail: {llm_error_detail}")
     st.text(report.clinician_report)
 
     st.subheader("Patient Summary")

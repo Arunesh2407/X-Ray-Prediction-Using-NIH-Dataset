@@ -43,17 +43,6 @@ def retrieve_evidence(
     evidence: list[EvidenceSnippet] = []
     for label in labels[:3]:
         evidence.extend(corpus[label])
-
-    if not evidence:
-        evidence.append(
-            EvidenceSnippet(
-                source="Internal",
-                title="No direct evidence retrieved",
-                snippet="No specific evidence file was found for the current prediction set.",
-                score=0.1,
-            )
-        )
-
     return evidence
 
 

@@ -8,6 +8,7 @@ import torch
 import torch.nn.functional as F
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 
+from src.config import get_gradcam_settings, get_label_descriptions, get_no_finding_label
 from src.model_stub import RealCNNModel
 from src.schema import PredictionItem, RegionAttribution
 
@@ -63,7 +64,12 @@ def generate_gradcam_regions(
     predictions: list[PredictionItem],
     output_dir: str | Path = Path("outputs/gradcam"),
 ) -> list[RegionAttribution]:
-    positive = [item for item in predictions if item.selected and item.label != "No finding"]
+    gradcam_settings = get_gradcam_settings()
+    no_finding_label = get_no_finding_label()
+    style_tag = str(gradcam_settings.get("style_tag", "jetgrid"))
+    max_regions = int(gradcam_settings.get("max_regions", 3))
+
+    positive = [item for item in predictions if item.selected and item.label != no_finding_label]
     regions: list[RegionAttribution] = []
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -75,9 +81,7 @@ def generate_gradcam_regions(
     base_image = Image.open(image_path).convert("RGB")
     gradcam = GradCAM(model.network, model.target_layer)
 
-    style_tag = "jetgrid"
-
-    for item in positive[:3]:
+    for item in positive[:max_regions]:
         class_index = model.labels.index(item.label)
         heatmap = gradcam.compute(image_tensor, class_index)
         description, laterality, lung_zone, coordinates, heatmap_path = _build_region_metadata(
@@ -100,8 +104,8 @@ def generate_gradcam_regions(
     if not regions:
         regions.append(
             RegionAttribution(
-                label="No finding",
-                description="No dominant focal abnormality detected on the provided image.",
+                label=no_finding_label,
+                description=str(gradcam_settings["no_finding_description"]),
                 heatmap_path=str(output_dir / f"{Path(image_path).stem}_no_finding_{style_tag}.png"),
                 coordinates=[0.0, 0.0, 1.0, 1.0],
             )
@@ -171,12 +175,13 @@ def _build_region_metadata(
     output_path: Path,
     label: str,
 ) -> tuple[str, str | None, str | None, list[float], Path]:
+    gradcam_settings = get_gradcam_settings()
     heatmap_array = heatmap.numpy()
     heatmap_image = Image.fromarray(np.uint8(heatmap_array * 255), mode="L")
     heatmap_image = heatmap_image.resize(base_image.size)
     grayscale_base = ImageOps.grayscale(base_image).convert("RGB")
     heatmap_color = Image.fromarray(_apply_jet_colormap(heatmap_array), mode="RGB").resize(base_image.size)
-    blended = Image.blend(grayscale_base, heatmap_color, alpha=0.46)
+    blended = Image.blend(grayscale_base, heatmap_color, alpha=float(gradcam_settings.get("blend_alpha", 0.46)))
 
     panel = _compose_gradcam_panel(grayscale_base, heatmap_color, blended)
     panel.save(output_path)
@@ -189,6 +194,7 @@ def _build_region_metadata(
 
 
 def _heatmap_bbox(heatmap: np.ndarray, threshold: float = 0.45) -> list[float]:
+    threshold = float(get_gradcam_settings().get("bbox_threshold", threshold))
     mask = heatmap >= threshold
     if not mask.any():
         return [0.0, 0.0, 1.0, 1.0]
@@ -204,44 +210,29 @@ def _heatmap_bbox(heatmap: np.ndarray, threshold: float = 0.45) -> list[float]:
 
 
 def _infer_laterality(coordinates: list[float]) -> str | None:
+    gradcam_settings = get_gradcam_settings()
     x1, _, x2, _ = coordinates
     midpoint = (x1 + x2) / 2
-    if midpoint < 0.42:
+    if midpoint < float(gradcam_settings.get("laterality_left_threshold", 0.42)):
         return "left"
-    if midpoint > 0.58:
+    if midpoint > float(gradcam_settings.get("laterality_right_threshold", 0.58)):
         return "right"
     return None
 
 
 def _infer_lung_zone(coordinates: list[float]) -> str | None:
+    gradcam_settings = get_gradcam_settings()
     _, y1, _, y2 = coordinates
     midpoint = (y1 + y2) / 2
-    if midpoint < 0.33:
+    if midpoint < float(gradcam_settings.get("lung_zone_upper_threshold", 0.33)):
         return "upper"
-    if midpoint > 0.66:
+    if midpoint > float(gradcam_settings.get("lung_zone_lower_threshold", 0.66)):
         return "lower"
     return "mid"
 
 
 def _label_to_description(label: str, laterality: str | None, lung_zone: str | None) -> str:
-    mapping = {
-        "Atelectasis": "linear or plate-like basal opacity consistent with volume loss",
-        "Consolidation": "focal air-space opacity suspicious for consolidation",
-        "Infiltration": "patchy interstitial or air-space opacity",
-        "Pneumothorax": "visible pleural line with absent peripheral lung markings",
-        "Edema": "bilateral perihilar interstitial opacity suggestive of edema",
-        "Emphysema": "hyperinflation with increased lucency",
-        "Fibrosis": "chronic reticular scarring pattern",
-        "Effusion": "blunting of the costophrenic angle with dependent opacity",
-        "Pneumonia": "lobar or segmental opacity concerning for infection",
-        "Pleural_thickening": "pleural-based linear thickening",
-        "Cardiomegaly": "enlarged cardiomediastinal silhouette",
-        "Mass": "rounded focal opacity requiring correlation",
-        "Nodule": "small rounded focal opacity requiring correlation",
-        "Hernia": "abnormal mediastinal or diaphragmatic contour",
-    }
-
-    base = mapping.get(label, "salient radiographic abnormality")
+    base = get_label_descriptions().get(label, "salient radiographic abnormality")
     location_parts = [part for part in [laterality, lung_zone] if part]
     if location_parts:
         return f"{', '.join(location_parts)} {base}"
@@ -274,7 +265,7 @@ def _compose_gradcam_panel(
     except OSError:
         label_font = ImageFont.load_default()
 
-    labels = ["Original", "Heatmap", "Superimposed"]
+    labels = get_gradcam_settings().get("panel_labels", ["Original", "Heatmap", "Superimposed"])
 
     x_cursor = padding
     for index, tile in enumerate(tiles):

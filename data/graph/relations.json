@@ -1,0 +1,128 @@
+{
+  "Atelectasis": [
+    {
+      "source": "Atelectasis",
+      "relation": "may_cooccur_with",
+      "target": "Effusion",
+      "explanation": "Pleural fluid can promote compressive atelectatic change."
+    }
+  ],
+  "Cardiomegaly": [
+    {
+      "source": "Cardiomegaly",
+      "relation": "may_support",
+      "target": "Edema",
+      "explanation": "Cardiac enlargement with vascular congestion can support cardiogenic edema."
+    }
+  ],
+  "Effusion": [
+    {
+      "source": "Effusion",
+      "relation": "may_cooccur_with",
+      "target": "Pneumonia",
+      "explanation": "Parapneumonic pleural effusions can accompany pulmonary infection."
+    }
+  ],
+  "Infiltration": [
+    {
+      "source": "Infiltration",
+      "relation": "overlaps_with",
+      "target": "Consolidation",
+      "explanation": "Both findings can represent increased lung opacity from inflammatory causes."
+    }
+  ],
+  "Mass": [
+    {
+      "source": "Mass",
+      "relation": "requires_follow_up_for",
+      "target": "Nodule",
+      "explanation": "Masses and nodules share differential pathways and follow-up imaging strategies."
+    }
+  ],
+  "Nodule": [
+    {
+      "source": "Nodule",
+      "relation": "may_progress_to",
+      "target": "Mass",
+      "explanation": "Enlarging pulmonary nodules may evolve into larger mass lesions over time."
+    }
+  ],
+  "Pneumonia": [
+    {
+      "source": "Pneumonia",
+      "relation": "may_cooccur_with",
+      "target": "Consolidation",
+      "explanation": "Airspace consolidation is a common radiographic expression of pneumonia."
+    },
+    {
+      "source": "Pneumonia",
+      "relation": "may_cause",
+      "target": "Effusion",
+      "explanation": "Infectious pleural inflammation can produce a parapneumonic effusion."
+    }
+  ],
+  "Pneumothorax": [
+    {
+      "source": "Pneumothorax",
+      "relation": "clinical_urgency",
+      "target": "Immediate assessment",
+      "explanation": "Large or tension pneumothorax can rapidly compromise ventilation and circulation."
+    }
+  ],
+  "Consolidation": [
+    {
+      "source": "Consolidation",
+      "relation": "may_support",
+      "target": "Pneumonia",
+      "explanation": "Focal consolidation with compatible symptoms supports infectious etiology."
+    }
+  ],
+  "Edema": [
+    {
+      "source": "Edema",
+      "relation": "may_support",
+      "target": "Cardiomegaly",
+      "explanation": "Pulmonary edema and cardiomegaly together favor cardiac decompensation."
+    }
+  ],
+  "Emphysema": [
+    {
+      "source": "Emphysema",
+      "relation": "risk_for",
+      "target": "Pneumothorax",
+      "explanation": "Bullous lung changes in emphysema can predispose to secondary pneumothorax."
+    }
+  ],
+  "Fibrosis": [
+    {
+      "source": "Fibrosis",
+      "relation": "may_overlap_with",
+      "target": "Pleural_thickening",
+      "explanation": "Chronic pleuroparenchymal processes can produce both fibrosis and pleural thickening."
+    }
+  ],
+  "Pleural_thickening": [
+    {
+      "source": "Pleural_thickening",
+      "relation": "may_cooccur_with",
+      "target": "Fibrosis",
+      "explanation": "Long-standing pleural disease may coexist with adjacent fibrotic change."
+    }
+  ],
+  "Hernia": [
+    {
+      "source": "Hernia",
+      "relation": "may_mimic",
+      "target": "Retrocardiac opacity",
+      "explanation": "A hiatal hernia can present as a retrocardiac opacity or air-fluid level."
+    }
+  ],
+  "No finding": [
+    {
+      "source": "No finding",
+      "relation": "supports",
+      "target": "No acute cardiopulmonary abnormality",
+      "explanation": "No dominant acute abnormal pattern was selected by the model."
+    }
+  ]
+}

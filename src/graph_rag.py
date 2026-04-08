@@ -27,17 +27,6 @@ def query_graph(predictions: list[PredictionItem], graph_path: str | None = None
     for prediction in predictions:
         if prediction.selected and prediction.label in graph:
             relations.extend(graph[prediction.label])
-
-    if not relations:
-        relations.append(
-            GraphRelation(
-                source="General",
-                relation="supports",
-                target="No direct graph match",
-                explanation="No disease-relationship path was matched for the current findings.",
-            )
-        )
-
     return relations
 
 
@@ -62,11 +51,11 @@ def _coerce_relation(item: object) -> GraphRelation:
     if isinstance(item, GraphRelation):
         return item
     if not isinstance(item, dict):
-        return GraphRelation(source="General", relation="supports", target="Unknown", explanation=str(item))
+        return GraphRelation(source="", relation="", target="", explanation=str(item))
 
     return GraphRelation(
-        source=str(item.get("source", "General")),
-        relation=str(item.get("relation", "supports")),
-        target=str(item.get("target", "Unknown")),
+        source=str(item.get("source", "")),
+        relation=str(item.get("relation", "")),
+        target=str(item.get("target", "")),
         explanation=str(item.get("explanation", "")),
     )

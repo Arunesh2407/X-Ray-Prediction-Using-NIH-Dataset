@@ -1,0 +1,128 @@
+{
+  "Atelectasis": [
+    {
+      "source": "Radiopaedia",
+      "title": "Atelectasis overview",
+      "snippet": "Atelectasis appears as volume loss with increased density and possible fissure displacement.",
+      "url": "https://radiopaedia.org/articles/atelectasis",
+      "score": 0.9
+    }
+  ],
+  "Cardiomegaly": [
+    {
+      "source": "Radiopaedia",
+      "title": "Cardiothoracic ratio",
+      "snippet": "Cardiomegaly is suggested when the cardiothoracic ratio exceeds approximately 0.5 on a PA chest radiograph.",
+      "url": "https://radiopaedia.org/articles/cardiomegaly",
+      "score": 0.88
+    }
+  ],
+  "Effusion": [
+    {
+      "source": "Radiopaedia",
+      "title": "Pleural effusion findings",
+      "snippet": "Pleural effusion may cause blunting of the costophrenic angle and meniscus sign.",
+      "url": "https://radiopaedia.org/articles/pleural-effusion",
+      "score": 0.91
+    }
+  ],
+  "Infiltration": [
+    {
+      "source": "Textbook",
+      "title": "Interstitial and alveolar infiltrates",
+      "snippet": "Infiltrates can represent inflammatory, infectious, or edema-related opacities in the lung fields.",
+      "score": 0.82
+    }
+  ],
+  "Mass": [
+    {
+      "source": "Guideline",
+      "title": "Pulmonary mass assessment",
+      "snippet": "A pulmonary mass is typically defined as an opacity greater than 3 cm and requires further characterization.",
+      "score": 0.84
+    }
+  ],
+  "Nodule": [
+    {
+      "source": "Fleischner Society",
+      "title": "Pulmonary nodule basics",
+      "snippet": "Pulmonary nodules are focal round opacities up to 3 cm; risk stratification depends on size and patient factors.",
+      "score": 0.87
+    }
+  ],
+  "Pneumonia": [
+    {
+      "source": "Radiopaedia",
+      "title": "Pneumonia radiographic pattern",
+      "snippet": "Lobar or patchy consolidation with air bronchograms may support a diagnosis of pneumonia.",
+      "url": "https://radiopaedia.org/articles/pneumonia",
+      "score": 0.93
+    }
+  ],
+  "Pneumothorax": [
+    {
+      "source": "Radiopaedia",
+      "title": "Pneumothorax signs",
+      "snippet": "A visible pleural line with absent peripheral lung markings suggests pneumothorax.",
+      "url": "https://radiopaedia.org/articles/pneumothorax",
+      "score": 0.94
+    }
+  ],
+  "Consolidation": [
+    {
+      "source": "Textbook",
+      "title": "Consolidation features",
+      "snippet": "Consolidation is homogeneous increased pulmonary parenchymal attenuation obscuring vascular margins.",
+      "score": 0.85
+    }
+  ],
+  "Edema": [
+    {
+      "source": "Guideline",
+      "title": "Pulmonary edema clues",
+      "snippet": "Cardiogenic pulmonary edema may show bilateral perihilar opacities, vascular congestion, and pleural effusions.",
+      "score": 0.89
+    }
+  ],
+  "Emphysema": [
+    {
+      "source": "Radiopaedia",
+      "title": "Emphysema imaging",
+      "snippet": "Hyperinflation, increased lucency, and flattened diaphragms are common chest X-ray findings in emphysema.",
+      "url": "https://radiopaedia.org/articles/emphysema",
+      "score": 0.86
+    }
+  ],
+  "Fibrosis": [
+    {
+      "source": "Review",
+      "title": "Pulmonary fibrosis features",
+      "snippet": "Reticular opacities, architectural distortion, and reduced lung volumes can indicate fibrotic lung disease.",
+      "score": 0.83
+    }
+  ],
+  "Pleural_thickening": [
+    {
+      "source": "Radiology Assistant",
+      "title": "Pleural thickening",
+      "snippet": "Pleural thickening appears as focal or diffuse pleural opacity and may reflect prior inflammation or exposure.",
+      "score": 0.8
+    }
+  ],
+  "Hernia": [
+    {
+      "source": "Textbook",
+      "title": "Hiatal hernia on chest X-ray",
+      "snippet": "A retrocardiac air-fluid level may suggest a hiatal hernia on frontal chest radiographs.",
+      "score": 0.78
+    }
+  ],
+  "No finding": [
+    {
+      "source": "Internal",
+      "title": "No acute cardiopulmonary abnormality",
+      "snippet": "No dominant acute radiographic abnormality was identified in the current image.",
+      "score": 0.7
+    }
+  ]
+}
